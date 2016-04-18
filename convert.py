@@ -15,13 +15,26 @@ dirs = os.listdir( path )
 json_list = []
 base_time = 1422105062
 
+image_list = []
 # This would print all the files and directories
 for file in dirs:
-    json_path = os.path.join(path, file,file + ".json")
-    #print ('process '+file)
+
+    common_path = os.path.join(path, file,file);
+    json_path = common_path+ ".json"
+
     json_data=open(json_path).read()
 
+
     data = json.loads(json_data)
+
+    data['fanhao'] = file
+
+    if os.path.exists(common_path+"l.jpg"):
+        data['image'] = 'data/img/jav/'+file+"l.jpg"
+        image_list.append(common_path+"l.jpg")
+    elif os.path.exists(common_path+"s.jpg"):
+        data['image'] = 'data/img/jav/'+file+"s.jpg"
+        image_list.append(common_path+"s.jpg")
 
     try:
         with open(os.path.join(path, file, file+"-magnet.txt") ) as f:
@@ -32,18 +45,23 @@ for file in dirs:
     json_list.append(data)
 
 
-json_list.sort(key=lambda data: datetime.datetime.strptime(data['date'],'%Y-%m-%d'))
+json_list.sort(key=lambda data: datetime.datetime.strptime(data['date'],'%Y-%m-%d'),reverse=True)
 
 post_list = []
 
 for idx,json_object in enumerate(json_list):
 
 
+    pic="配图暂缺\n"
 
-    body = '发布日期:'+json_object['date'] + '\n'+ \
+    if 'image' in json_object.keys():
+        pic="![]("+json_object['image']+")\n"
+
+    body = pic + \
+            '发布日期:'+json_object['date'] + '\n'+ \
             '系列:'+json_object['series'] + '\n' + \
             '分类:'+','.join(json_object['category']) + '\n' +  \
-            'actress:' + ','.join( json_object['actress']) + '\n' +\
+            '女优:' + ','.join( json_object['actress']) + '\n' +\
             'downloads:' 
 
     if 'magnets' in json_object.keys():
@@ -72,4 +90,11 @@ all_object=OrderedDict([
         
     
 json_str = json.dumps(all_object,ensure_ascii=False,indent=4).encode('utf8')
-print (json_str)
+
+out_file = open('data.json',"w")
+out_file.write(json_str)
+
+
+for i in image_list:
+    print (i)
+
